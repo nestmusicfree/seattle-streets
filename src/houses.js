@@ -31,6 +31,20 @@ function M(parent, geo, material, x, y, z, rx = 0, ry = 0, rz = 0) {
   return m;
 }
 
+
+function door(parent, w, h, material, x, y, z) {
+  const hinge = new THREE.Group();
+  hinge.position.set(x - w / 2, y, z);
+  M(hinge, new THREE.BoxGeometry(w, h, 0.1), material, w / 2, 0, 0);
+  M(hinge, new THREE.SphereGeometry(0.055, 8, 8), mat('#e6d3a4', 0.35, 0.55), w - 0.14, 0, 0.08);
+  parent.add(hinge);
+  hinge.userData.open = false;
+  hinge.userData.halfW = w / 2;
+  if (!parent.userData.doors) parent.userData.doors = [];
+  parent.userData.doors.push(hinge);
+  return hinge;
+}
+
 function windows(parent, cols, rows, x0, y0, z, gapX, gapY, w = 0.7, h = 0.9, glowMat = glow) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -102,7 +116,7 @@ function creamVilla(g) {
   M(g, new THREE.BoxGeometry(6.2, 2.6, 6.6), cream, -1.2, 4.2, -0.2);
   M(g, new THREE.BoxGeometry(10.8, 0.18, 7.8), creamTrim, 0, 3.5, 0);
   M(g, new THREE.BoxGeometry(6.6, 0.18, 7), creamTrim, -1.2, 5.55, -0.2);
-  M(g, new THREE.BoxGeometry(1.1, 2.1, 0.12), wood, 0, 1.2, 3.76);
+  door(g, 1.1, 2.1, wood, 0, 1.2, 3.76);
   M(g, new THREE.BoxGeometry(2.4, 0.12, 1.1), creamTrim, 0, 2.35, 4.15);
   for (let i = 0; i < 4; i++) M(g, new THREE.BoxGeometry(2.2, 0.08, 0.08), mat('#d5dde2', 0.3, 0.4), 2.4, 1.15 + i * 0.18, 4.05);
   M(g, new THREE.BoxGeometry(3.6, 0.14, 1.6), creamTrim, 2.1, 3.52, 4.35);
@@ -127,7 +141,7 @@ function greyModern(g) {
   for (let i = 0; i < 5; i++) M(g, new THREE.BoxGeometry(3.6, 0.05, 0.06), mat('#dfe7ee', 0.3, 0.5), -1.5, 2.4 + i * 0.12, 3.7);
   windows(g, 3, 1, -1.2, 1.6, 3.75, 1.3, 1, 0.85, 1.05);
   windows(g, 2, 1, 1.2, 4.2, 3.35, 1.4, 1, 0.8, 1);
-  M(g, new THREE.BoxGeometry(1.2, 2.2, 0.1), woodDark, 3.6, 1.25, 3.76);
+  door(g, 1.2, 2.2, woodDark, 3.6, 1.25, 3.76);
   g.userData.footprint = { w: 12.2, d: 8.6 };
 }
 
@@ -141,7 +155,7 @@ function duskVilla(g) {
   M(g, new THREE.BoxGeometry(4.6, 0.12, 1.8), charcoal, -2.2, 3.05, 3.1);
   windows(g, 3, 1, -1.5, 1.55, 3.85, 1.35, 1, 0.9, 1.15, mat('#ffd7a1', 0.4, 0, { emissive: '#ff9a3c', emissiveIntensity: 0.9 }));
   windows(g, 2, 1, 0.2, 4.15, 3.15, 1.5, 1, 0.95, 1.05, mat('#ffd7a1', 0.4, 0, { emissive: '#ff9a3c', emissiveIntensity: 0.9 }));
-  M(g, new THREE.BoxGeometry(1.15, 2.15, 0.1), wood, 3.5, 1.25, 3.86);
+  door(g, 1.15, 2.15, wood, 3.5, 1.25, 3.86);
   // carport
   M(g, new THREE.BoxGeometry(4.2, 0.16, 4.4), charcoal, 7.2, 2.7, 0.4);
   M(g, new THREE.BoxGeometry(0.2, 2.6, 0.2), charcoal, 5.4, 1.4, 2.3);
@@ -162,7 +176,7 @@ function glassVilla(g) {
   M(g, new THREE.BoxGeometry(6.6, 2.2, 5.2), glass, 1.4, 4.5, 0.5);
   M(g, new THREE.BoxGeometry(6.8, 0.16, 5.4), charcoal, 1.4, 5.65, 0.5);
   windows(g, 4, 1, -3.2, 1.7, 3.5, 1.15, 1, 0.8, 1.3);
-  M(g, new THREE.BoxGeometry(1.3, 2.2, 0.1), woodDark, 3.8, 1.25, 3.46);
+  door(g, 1.3, 2.2, woodDark, 3.8, 1.25, 3.46);
   g.userData.footprint = { w: 10.8, d: 8.4 };
 }
 
@@ -174,7 +188,7 @@ function tharavad(g) {
   for (const x of [-3.2, -1.1, 1.1, 3.2]) {
     M(g, new THREE.CylinderGeometry(0.12, 0.12, 2.3, 8), wood, x, 1.25, 4.2);
   }
-  M(g, new THREE.BoxGeometry(1.3, 2.1, 0.1), woodDark, 0, 1.2, 3.36);
+  door(g, 1.3, 2.1, woodDark, 0, 1.2, 3.36);
   windows(g, 4, 1, -3.6, 1.8, 3.35, 1.7, 1, 0.7, 1.05);
   g.userData.footprint = { w: 12.4, d: 9 };
 }
@@ -187,7 +201,7 @@ function colonial(g) {
   for (const x of [-2.6, -0.9, 0.9, 2.6]) {
     M(g, new THREE.CylinderGeometry(0.1, 0.12, 2.4, 8), plaster, x, 1.3, 4);
   }
-  M(g, new THREE.BoxGeometry(1.2, 2.15, 0.1), wood, 0, 1.2, 3.46);
+  door(g, 1.2, 2.15, wood, 0, 1.2, 3.46);
   windows(g, 4, 1, -3.3, 1.9, 3.45, 1.6, 1, 0.65, 1);
   M(g, new THREE.BoxGeometry(0.35, 0.7, 0.35), stone, -3.6, 4.3, 0.4);
   g.userData.footprint = { w: 11.2, d: 8.2 };
@@ -197,7 +211,7 @@ function mudHouse(g) {
   const wall = wallMat('#c4a06a', 2, 2);
   M(g, new THREE.BoxGeometry(6.2, 2.4, 5), wall, 0, 1.2, 0);
   gable(g, 7.0, 5.8, 3.05, roofMudMat, 1.25);
-  M(g, new THREE.BoxGeometry(0.9, 1.7, 0.1), woodDark, 0, 0.95, 2.55);
+  door(g, 0.9, 1.7, woodDark, 0, 0.95, 2.55);
   windows(g, 2, 1, -1.5, 1.35, 2.55, 3, 1, 0.6, 0.7, mat('#f0d7a4', 0.5, 0, { emissive: '#e7a85a', emissiveIntensity: 0.35 }));
   g.userData.footprint = { w: 6.6, d: 5.4 };
 }
@@ -208,7 +222,7 @@ function cabin(g) {
   M(g, new THREE.BoxGeometry(6.4, 2.6, 5.2), wall, 0, 1.3, 0);
   gable(g, 7.2, 6.0, 3.35, roofDarkMat, 1.45);
   M(g, new THREE.BoxGeometry(0.16, 2.4, 4.6), mat('#3e2a1c'), -3.15, 1.4, 0);
-  M(g, new THREE.BoxGeometry(0.9, 1.9, 0.1), woodDark, 0.8, 1.05, 2.66);
+  door(g, 0.9, 1.9, woodDark, 0.8, 1.05, 2.66);
   windows(g, 2, 1, -1.6, 1.5, 2.66, 1.5, 1, 0.6, 0.75);
   g.userData.footprint = { w: 6.8, d: 5.6 };
 }
@@ -221,6 +235,7 @@ function futurePod(g) {
   M(g, new THREE.CylinderGeometry(0.4, 0.5, 2.2, 12), mat('#9aa3ad', 0.35, 0.6), -2.6, 1.2, 2.4);
   windows(g, 2, 1, -0.8, 1.3, 3.15, 1.8, 1, 1.1, 1.1, mat('#b9e7ff', 0.2, 0.1, { emissive: '#7fd0ff', emissiveIntensity: 0.4 }));
   windows(g, 2, 1, -0.7, 3.2, 2.65, 1.6, 1, 0.9, 0.8, mat('#b9e7ff', 0.2, 0.1, { emissive: '#7fd0ff', emissiveIntensity: 0.35 }));
+  door(g, 1.05, 1.9, mat('#dfe7ee', 0.4, 0.3), 1.5, 1.15, 3.16);
   g.userData.footprint = { w: 7, d: 6.6 };
 }
 
@@ -228,7 +243,7 @@ function minimal(g) {
   const wall = mat('#5c4636', 0.82);
   M(g, new THREE.BoxGeometry(6.2, 2.8, 4.8), wall, 0, 1.4, 0);
   M(g, new THREE.BoxGeometry(6.6, 0.16, 5.2), roofDark, 0, 2.9, 0);
-  M(g, new THREE.BoxGeometry(0.9, 2, 0.1), mat('#d8d2c8'), 1.6, 1.1, 2.46);
+  door(g, 0.9, 2, mat('#d8d2c8'), 1.6, 1.1, 2.46);
   windows(g, 2, 2, -1.6, 1.15, 2.46, 1.3, 1.15, 0.7, 0.7);
   g.userData.footprint = { w: 6.6, d: 5.2 };
 }

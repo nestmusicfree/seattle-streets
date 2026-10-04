@@ -23,11 +23,13 @@ function addBox(parent, w, h, d, material, x, y, z) {
   return m;
 }
 
+let houseDoors = [];
 function place(scene, colliders, type, x, z, rot) {
   const h = buildHouse(type);
   h.position.set(x, 0, z);
   h.rotation.y = rot;
   scene.add(h);
+  for (const pivot of h.userData.doors || []) houseDoors.push(pivot);
   const { w, d } = h.userData.footprint;
   const c = Math.abs(Math.cos(rot));
   const s = Math.abs(Math.sin(rot));
@@ -39,6 +41,7 @@ function place(scene, colliders, type, x, z, rot) {
 
 export function buildWorld(scene) {
   const colliders = [];
+  houseDoors = [];
   const grassTex = grassTexture();
   grassTex.repeat.set(48, 48);
   const asphaltTex = noiseTexture('#3a3d42', '#2a2c30', 700);
@@ -185,7 +188,7 @@ export function buildWorld(scene) {
   colliders.push({ minx: -80, maxx: -72, minz: -80, maxz: 80 });
   colliders.push({ minx: 72, maxx: 80, minz: -80, maxz: 80 });
 
-  return { colliders };
+  return { colliders, doors: houseDoors };
 }
 
 export function blocked(colliders, x, z, radius) {

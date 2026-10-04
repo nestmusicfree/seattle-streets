@@ -139,6 +139,9 @@ function showMenus() {
   titleEl.classList.toggle('hidden', mode !== 'title');
   settingsEl.classList.toggle('hidden', mode !== 'settings');
   pauseEl.classList.toggle('hidden', mode !== 'pause');
+  const placing = mode === 'settings';
+  if (!placing && document.body.classList.contains('placing')) applyButtonLayout();
+  document.body.classList.toggle('placing', placing);
 }
 
 function loadSettings() {
@@ -322,9 +325,164 @@ for (const id of ['set-music', 'set-sfx', 'set-cam', 'set-shadows']) {
     saveSettings();
   });
 }
-document.getElementById('btn-punch').onclick = () => doPunch();
-document.getElementById('btn-emote').onclick = () => doEmote((emoteIndex + (player.userData.emote ? 1 : 0)) % 4);
-document.getElementById('btn-vehicle').onclick = () => toggleDrive();
+const LAYOUT_KEY = 'worlds-frvr-buttons';
+const actionEls = ['btn-punch', 'btn-emote', 'btn-vehicle'].map((id) => document.getElementById(id));
+const doorPoint = new THREE.Vector3();
+
+function clientToStage(clientX, clientY) {
+  const stage = document.getElementById('stage');
+  const rect = stage.getBoundingClientRect();
+  if (window.innerHeight <= window.innerWidth) {
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  return {
+    x: (clientY - cy) + stage.clientWidth / 2,
+    y: -(clientX - cx) + stage.clientHeight / 2,
+  };
+}
+
+function applyButtonLayout() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null'); } catch { saved = null; }
+  const stage = document.getElementById('stage');
+  for (const el of actionEls) {
+    const spot = saved && saved[el.id.replace('btn-', '')];
+    if (spot) {
+      el.style.left = `${spot.x * stage.clientWidth}px`;
+      el.style.top = `${spot.y * stage.clientHeight}px`;
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+    } else {
+      el.style.left = '';
+      el.style.top = '';
+      el.style.right = '';
+      el.style.bottom = '';
+    }
+  }
+}
+
+function readFractions() {
+  const stage = document.getElementById('stage');
+  const w = stage.clientWidth || 1;
+  const h = stage.clientHeight || 1;
+  const out = {};
+  for (const el of actionEls) {
+    out[el.id.replace('btn-', '')] = {
+      x: Math.min(0.92, Math.max(0, el.offsetLeft / w)),
+      y: Math.min(0.92, Math.max(0, el.offsetTop / h)),
+    };
+  }
+  return out;
+}
+
+applyButtonLayout();
+addEventListener('resize', applyButtonLayout);
+
+let drag = null;
+for (const el of actionEls) {
+  el.addEventListener('pointerdown', (e) => {
+    if (!document.body.classList.contains('placing')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    el.setPointerCapture(e.pointerId);
+    const local = clientToStage(e.clientX, e.clientY);
+    drag = { el, pointer: e.pointerId, ox: local.x - el.offsetLeft, oy: local.y - el.offsetTop };
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!drag || drag.el !== el || drag.pointer !== e.pointerId) return;
+    const stage = document.getElementById('stage');
+    const local = clientToStage(e.clientX, e.clientY);
+    const x = Math.max(0, Math.min(stage.clientWidth - el.offsetWidth, local.x - drag.ox));
+    const y = Math.max(0, Math.min(stage.clientHeight - el.offsetHeight, local.y - drag.oy));
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+  });
+  const endDrag = (e) => { if (drag && drag.pointer === e.pointerId) drag = null; };
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointercancel', endDrag);
+}
+
+document.getElementById('btn-gear').onclick = () => {
+  if (mode === 'settings') return;
+  settingsFrom = mode === 'title' || mode === 'pause' ? mode : 'play';
+  if (mode === 'play') document.exitPointerLock?.();
+  mode = 'settings';
+  showMenus();
+};
+document.getElementById('btn-layout-save').onclick = () => {
+  localStorage.setItem(LAYOUT_KEY, JSON.stringify(readFractions()));
+  const btn = document.getElementById('btn-layout-save');
+  btn.textContent = 'Saved';
+  setTimeout(() => { btn.textContent = 'Save'; }, 900);
+};
+
+document.getElementById('btn-punch').onclick = () => {
+  if (document.body.classList.contains('placing')) return;
+  doPunch();
+};
+document.getElementById('btn-emote').onclick = () => {
+  if (document.body.classList.contains('placing')) return;
+  doEmote((emoteIndex + (player.userData.emote ? 1 : 0)) % 4);
+};
+document.getElementById('btn-vehicle').onclick = () => {
+  if (document.body.classList.contains('placing')) return;
+  toggleDrive();
+};
+
+let contextDoor = null;
+function nearestDoor() {
+  let best = null;
+  let bestD = 2.5;
+  for (const door of world.doors) {
+    doorPoint.set(door.userData.halfW, 0, 0.4);
+    door.localToWorld(doorPoint);
+    const dist = doorPoint.distanceTo(player.position);
+    if (dist < bestD) { bestD = dist; best = door; }
+  }
+  return best ? { door: best, dist: bestD } : null;
+}
+function refreshContext() {
+  const btn = document.getElementById('btn-context');
+  const label = document.getElementById('ctx-label');
+  contextDoor = null;
+  if (!playing || mode !== 'play') {
+    btn.classList.add('hidden');
+    return;
+  }
+  if (driving) {
+    btn.dataset.kind = 'exit';
+    label.textContent = 'Exit';
+    btn.classList.remove('hidden');
+    return;
+  }
+  const carD = player.position.distanceTo(driveCar.position);
+  const found = nearestDoor();
+  if (found && (carD >= 3.2 || found.dist <= carD)) {
+    contextDoor = found.door;
+    const open = found.door.userData.open;
+    btn.dataset.kind = open ? 'close' : 'open';
+    label.textContent = open ? 'Close' : 'Open';
+    btn.classList.remove('hidden');
+  } else if (carD < 3.2) {
+    btn.dataset.kind = 'getin';
+    label.textContent = 'Get In';
+    btn.classList.remove('hidden');
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+document.getElementById('btn-context').onclick = () => {
+  const kind = document.getElementById('btn-context').dataset.kind;
+  if (kind === 'getin' || kind === 'exit') toggleDrive();
+  else if (contextDoor) {
+    contextDoor.userData.open = !contextDoor.userData.open;
+    blip(contextDoor.userData.open ? 520 : 300, 0.06);
+  }
+};
 
 const stick = document.getElementById('joystick');
 const knob = document.getElementById('knob');
@@ -509,6 +667,12 @@ function frame() {
     camera.position.lerp(camPos, 1 - Math.pow(0.0015, dt));
   }
   camera.lookAt(look);
+
+  for (const door of world.doors) {
+    const target = door.userData.open ? -1.15 : 0;
+    door.rotation.y += (target - door.rotation.y) * Math.min(1, dt * 7);
+  }
+  refreshContext();
 
   const near = player.position.distanceTo(driveCar.position) < 3.2;
   promptEl.classList.toggle('show', playing && (near || driving));
