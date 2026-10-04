@@ -1,0 +1,9 @@
+node_modules/
+android/.gradle/
+android/build/
+android/**/build/
+*.jks
+local.properties
+.DS_Store
+android-sdk/
+/workspace/android-sdk/

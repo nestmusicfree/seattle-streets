@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SEATTLE STREETS</title>
+    <script type="module" crossorigin src="/assets/index-BRxNUXVK.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Lbggi9Up.css">
+  </head>
+  <body>
+    <div id="stage">
+      <div id="hud">
+        <div class="brand">SEATTLE STREETS</div>
+        <div id="help">WASD move · Shift sprint · Space jump · F vehicle · J punch · 1-4 emotes · Esc pause</div>
+        <div id="status">On foot</div>
+      </div>
+      <div id="prompt"></div>
+      <div id="emote-label"></div>
+      <div id="touch">
+        <div id="joystick" aria-label="Move"><div id="knob"></div></div>
+        <div id="actions">
+          <button type="button" id="btn-punch">Punch</button>
+          <button type="button" id="btn-emote">Emote</button>
+          <button type="button" id="btn-vehicle">Vehicle</button>
+        </div>
+      </div>
+      <section id="title-screen" class="menu">
+        <h1>SEATTLE STREETS</h1>
+        <p>A neighborhood you can walk.</p>
+        <button type="button" id="btn-start">START</button>
+        <button type="button" id="btn-open-settings">SETTINGS</button>
+      </section>
+      <section id="settings-screen" class="menu hidden">
+        <h2>Settings</h2>
+        <label>Music volume <input id="set-music" type="range" min="0" max="100" value="35" /></label>
+        <label>SFX volume <input id="set-sfx" type="range" min="0" max="100" value="80" /></label>
+        <label>Camera distance <input id="set-cam" type="range" min="4" max="12" step="0.1" value="4.6" /></label>
+        <label class="check"><input id="set-shadows" type="checkbox" checked /> Shadows</label>
+        <button type="button" id="btn-settings-back">Back</button>
+      </section>
+      <section id="pause-screen" class="menu hidden">
+        <h2>Paused</h2>
+        <button type="button" id="btn-resume">Resume</button>
+        <button type="button" id="btn-pause-settings">Settings</button>
+        <button type="button" id="btn-main-menu">Main Menu</button>
+      </section>
+    </div>
+  </body>
+</html>
